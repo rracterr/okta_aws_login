@@ -1,9 +1,5 @@
 #!/usr/bin/env python3
 
-# From https://github.com/nimbusscale/okta_aws_login
-#
-# Tweeked for move.com by Ben Knauss
-
 import argparse
 import base64
 import configparser
