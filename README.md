@@ -22,12 +22,14 @@ The okta_aws_login tool will prompt the user for the necessary credentials neede
 and then utilize the SAML assertion generation by Okta to retrieve temporary AWS Access and Secret Keys and an AWS 
 Session Token. The AWS credentials will then be written to the local AWS credentials file to be utilized by aws cli.
 
-okta_aws_login.py supports both password only and Multi-Factor Authentication (MFA). The following MFA options are 
+get_aws_keys.py supports both password only and Multi-Factor Authentication (MFA). The following MFA options are 
 supported:
 
 * Okta Verify 
+* Okta Verify (Push)
 * Google Authenticator 
 * SMS Authentication 
+* Voice Call
 
 # Improvements over V1
 
@@ -35,6 +37,9 @@ supported:
 * Multiple Role Support
 * Username is provided as a default
 * Role is selectable via command line
+* Supports more authentication factors
+* Fully Okta API Compliant, no more screen scraping
+* returns usefull error codes
 
 # CONFIGURATION
 Before running okta_aws_login you must create a configuration file, this file is 
@@ -42,22 +47,25 @@ expected to be named "~/.aws/okta" and must follow the format:
     
 
 ````
-[dev]
-provider_url  = https://mycompany.okta.com/home/amazon_aws/0oa18v5lxcd1X3pDr1e8/272
-region        = us-west-2
+[masteraccount_dev]
+provider_url = https://mycompany.okta.com/home/amazon_aws/0oa11v5lxcd1X3pDr1e8/272
+sso_url      = https://mycompany.okta.com/app/amazon_aws/exk11v5lxccqsdwor1e8/sso/saml
+region       = us-west-2
 
 ````
 
 ````
-[qa]
-provider_url  = https://mycompany.okta.com/home/amazon_aws/0oa18v5lxcd1X3pDr1e8/273
-region        = us-west-2
+[masteraccount_qa]
+provider_url = https://mycompany.okta.com/home/amazon_aws/3oa11v5lxcd1X3pDr1e8/272
+sso_url      = https://mycompany.okta.com/app/amazon_aws/exk13v5lxccqsdwor1e8/sso/saml
+region       = us-west-2
 ````
 
 ````
-[prod]
-provider_url  = https://mycompany.okta.com/home/amazon_aws/0oa18v5lxcd1X3pDr1e8/276
-region        = us-west-2
+[masteraccount_prod]
+provider_url = https://mycompany.okta.com/home/amazon_aws/0oa12v5lxcd1X3pDr1e8/272
+sso_url      = https://mycompany.okta.com/app/amazon_aws/exk12v5lxccqsdwor1e8/sso/saml
+region       = us-west-2
 ````
 
 ...
@@ -74,11 +82,28 @@ available to an Okta user with admin rights. If you are not an admin then you wi
 The simplest usage is to just call okta_aws_login.py from the command line. You will be prompted for the necessary 
 credentials, including MFA credentials.
 
-    $ okta_aws_login.py -p prod
-    Okta AWS Authentication Tool
-    Username [bobdole]: bobdole
-    Password for bobdole: ********
-    Enter your Okta Verify code: 123456
+````
+        $ get_aws_keys.py -p masteraccount_prod
+        Okta Authentication Tool
+        Username [bknauss] : 
+        Password for bknauss: 
+        Select which MFA method would you like to use?: 
+        1 )   SMS
+        2 )   Google Authenticator
+        3 )   Okta Verify
+        4 )   Okta Verify (push)
+        5 )   Okta Call
+        Factor number : 1
+        sms> Enter your sms code: 641938
+        Select which role in the move_dev account : 
+        1 ) ReadOnly
+        2 ) Move-SE
+        3 ) User
+        4 ) Admin
+        Role number : 3
+        Role:  arn:aws:iam::860429940966:role/User
+        Credentials for the profile move_dev have been set. They will expire in 60 minutes.
+````
 
 Once okta_aws_login.py successfully runs, your Okta session ID will be cached and will be used 
 to retrieve future temporary AWS credentials. The temporary AWS credentials will typically expired in 60 minutes, while
@@ -89,7 +114,7 @@ Since the session ID is used for authentication you will not be prompted for cre
 The Okta username can be specified in two other ways, one is via a command line argument using the --username option 
 or by setting the username in the OKTA_USERNAME environment variable.
 
-Additional options exist and others may be added in the future. Running `okta_aws_login.py --help` will show you all the
+Additional options exist and others may be added in the future. Running `get_aws_keys.py --help` will show you all the
 options.
 
 # Other Resources
